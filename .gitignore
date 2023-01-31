@@ -1,2 +1,4 @@
 .env
 .vscode/settings.json
+sqldatabase.db
+__pycache__/
