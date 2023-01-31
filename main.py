@@ -98,7 +98,48 @@ async def chat(ctx, engine: str, max_tokens: int = 100, temperature: float = 0.9
     if engine not in [e.id for e in available_engines['data']]:
         await ctx.respond(content=f"Invalid engine, please choose one of the following options: ```{[e.id for e in available_engines['data']]}```")
         return
-    return await ctx.respond(content="This command is not ready yet.")
+    if thread_type not in ["public", "private"]:
+        await ctx.respond(content="Invalid thread type, please choose one of the following options: `public` or `private`")
+        return
+    if thread_type == "public":
+        thread = await ctx.channel.create_public_thread(name=f"{ctx.author.name}'s ChatGPT Thread", auto_archive_duration=60)
+    else:
+        thread = await ctx.channel.create_private_thread(name=f"{ctx.author.name}'s ChatGPT Thread")
+    await thread.send(content="ChatGPT Thread started. Type `>chatgpt end` to end the thread.")
+    # honestly, this is a bit of a mess, but it works
+    while True:
+        # umm, I didn't want to do this since the person is responsible for their own actions, but I guess I have to
+        def check(m):
+            return m.author == ctx.author and m.channel == thread
+        try:
+            # does this work...?
+            msg = await client.wait_for("message", check=check, timeout=60)
+        except asyncio.TimeoutError:
+            await thread.send(content="ChatGPT Thread timed out.")
+            await thread.edit(auto_archive_duration=60)
+            return
+        if msg.content == ">chatgpt end":
+            await thread.send(content="ChatGPT Thread ended.")
+            await thread.edit(auto_archive_duration=60)
+            return
+        prompt = f"{msg.content}"
+        response = openai.Completion.create(
+            engine=engine,
+            prompt=prompt,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            top_p=top_p,
+            frequency_penalty=frequency_penalty,
+            presence_penalty=presence_penalty,
+            stop=stop
+        )
+        if response['choices'][0]['text'] is None:
+            await thread.send(content="No response.")
+        elif response['choices'][0]['text'] > 2000:
+            await thread.send(content="Response too long, sending as file.")
+            await thread.send(file=discord.File(response['choices'][0]['text'], filename="response.txt"))
+        else:
+            await thread.send(content=response['choices'][0]['text'])
 
 @client.slash_command(
     name="ask",
@@ -113,7 +154,27 @@ async def ask(ctx, question: str, engine: str, max_tokens: int = 100, temperatur
     if engine not in [e.id for e in available_engines['data']]:
         await ctx.respond(content=f"Invalid engine, please choose one of the following options: ```{[e.id for e in available_engines['data']]}```")
         return
-    return await ctx.respond(content="This command is not ready yet.")
+    if max_tokens > 2048:
+        await ctx.respond(content="Max tokens cannot be greater than 2048.")
+        return
+    response = openai.Completion.create(
+        engine=engine,
+        prompt=question,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        top_p=top_p,
+        frequency_penalty=frequency_penalty,
+        presence_penalty=presence_penalty,
+        stop=stop
+    )
+    if response['choices'][0]['text'] is None:
+        await ctx.respond(content="No response.")
+    elif response['choices'][0]['text'] > 2000:
+        await ctx.respond(content="Response is too long, sending as file.")
+        await ctx.respond(file=discord.File(response['choices'][0]['text'], filename="response.txt"))
+        return
+    else:
+        await ctx.respond(content=response['choices'][0]['text'])
 
 @client.slash_command(
     name="setup",
@@ -143,5 +204,4 @@ async def setup(ctx, action: str, api_key: str = None):
         else :
             return await ctx.respond(content="Your account has been deleted.")
     
-
 client.run(os.getenv("TOKEN"))
