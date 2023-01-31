@@ -4,7 +4,6 @@
 # License: GPL-3.0
 ###
 
-# imports
 import discord
 import openai
 import os
