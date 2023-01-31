@@ -83,4 +83,25 @@ async def uptime(ctx):
 
     await ctx.respond(content=f"Uptime: {uptime}")
 
+@client.slash_command(
+    name="chat",
+    description="Chat with the bot in a thread."
+)
+async def chat(ctx):
+    return await ctx.respond(content="This command is not ready yet.")
+
+@client.slash_command(
+    name="ask",
+    description="Ask the bot a question."
+)
+async def ask(ctx, question: str):
+    return await ctx.respond(content="This command is not ready yet.")
+
+@client.slash_command(
+    name="setup",
+    description="setup your account."
+)
+async def setup(ctx):
+    return await ctx.respond(content="This command is not ready yet.")
+
 client.run(os.getenv("TOKEN"))
