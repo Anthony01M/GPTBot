@@ -11,6 +11,7 @@ import datetime
 import asyncio
 from discord.ext import commands
 from dotenv import load_dotenv
+from database import add_user, delete_user, get_api_key
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -109,11 +110,21 @@ async def setup(ctx, action: str, api_key: str = None):
     if ctx.guild_id is not None:
         return await ctx.respond(content="This command can only be used in DMs.")
     if action == "add":
-        # TODO: do add
-        pass
+        if api_key is None:
+            return await ctx.respond(content="You must provide an API key.")
+        if add_user(ctx.author.id, api_key):
+            return await ctx.respond(content="You must provide a valid API key.")
+        elif add_user(ctx.author.id, api_key) == "updated":
+            add_user(ctx.author.id, api_key)
+            await ctx.respond(content="You were already registered to the bot, your API key has been updated.")
+        else:
+            add_user(ctx.author.id, api_key)
+            await ctx.respond(content="You have been registered to the bot.")
     if action == "delete":
-        # TODO: do delete
-        pass
+        if delete_user(ctx.author.id):
+            return await ctx.respond(content="You do not have an account.")
+        else :
+            return await ctx.respond(content="Your account has been deleted.")
     
 
 client.run(os.getenv("TOKEN"))
