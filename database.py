@@ -8,7 +8,10 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from cryptography.fernet import Fernet
 import os
+from dotenv import load_dotenv
 import openai
+
+load_dotenv()
 
 engine = create_engine(os.getenv("HOST"), echo=True)
 Base = declarative_base()
