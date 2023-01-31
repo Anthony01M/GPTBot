@@ -88,14 +88,31 @@ async def uptime(ctx):
     name="chat",
     description="Chat with the bot in a thread."
 )
-async def chat(ctx):
+@discord.default_permissions(send_messages=True, create_public_threads=True, create_private_threads=True)
+async def chat(ctx, engine: str, max_tokens: int = 100, temperature: float = 0.9, top_p: float = 1, frequency_penalty: float = 0, presence_penalty: float = 0, stop: str = "\n", thread_type: str = "public"):
+    api_key = get_api_key(ctx.author.id)
+    if api_key is None:
+        return await ctx.respond(content="You do not have an account. Use `/setup add <api_key>` to create one.")
+    openai.api_key = api_key
+    available_engines = openai.Model.list()
+    if engine not in [e.id for e in available_engines['data']]:
+        await ctx.respond(content=f"Invalid engine, please choose one of the following options: ```{[e.id for e in available_engines['data']]}```")
+        return
     return await ctx.respond(content="This command is not ready yet.")
 
 @client.slash_command(
     name="ask",
     description="Ask the bot a question."
 )
-async def ask(ctx, question: str):
+async def ask(ctx, question: str, engine: str, max_tokens: int = 100, temperature: float = 0.9, top_p: float = 1, frequency_penalty: float = 0, presence_penalty: float = 0, stop: str = "\n"):
+    api_key = get_api_key(ctx.author.id)
+    if api_key is None:
+        return await ctx.respond(content="You do not have an account. Use `/setup add <api_key>` to create one.")
+    openai.api_key = api_key
+    available_engines = openai.Model.list()
+    if engine not in [e.id for e in available_engines['data']]:
+        await ctx.respond(content=f"Invalid engine, please choose one of the following options: ```{[e.id for e in available_engines['data']]}```")
+        return
     return await ctx.respond(content="This command is not ready yet.")
 
 @client.slash_command(
