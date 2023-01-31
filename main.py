@@ -16,6 +16,8 @@ from dotenv import load_dotenv
 intents = discord.Intents.default()
 intents.message_content = True
 
+load_dotenv()
+
 client = discord.Bot(intents=intents, activity=discord.Activity(
     type=2, name="https://github.com/Berry-Studios/ChatGPTBot"), status=discord.Status.do_not_disturb)
 
@@ -23,6 +25,11 @@ client = discord.Bot(intents=intents, activity=discord.Activity(
 async def on_ready():
     print(f"Bot Logged in as: {client.user.name}#{client.user.discriminator}")
 
-load_dotenv()
+@client.slash_command(
+    name="ping",
+    description="Bot latency"
+)
+async def ping(ctx):
+    await ctx.respond(content=f"Pong! {round(client.latency * 1000)}ms")
 
 client.run(os.getenv("TOKEN"))
