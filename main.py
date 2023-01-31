@@ -101,7 +101,19 @@ async def ask(ctx, question: str):
     name="setup",
     description="setup your account."
 )
-async def setup(ctx):
-    return await ctx.respond(content="This command is not ready yet.")
+@discord.commands.option(name="action", description="What action would you like to take?", choices=["add", "delete"], required=True)
+@discord.commands.option(name="api_key", description="API key from https://openai.com/ which allows you to use the bot", required=False)
+@discord.default_permissions(send_messages=True)
+async def setup(ctx, action: str, api_key: str = None):
+    # command cannot be used in guilds
+    if ctx.guild_id is not None:
+        return await ctx.respond(content="This command can only be used in DMs.")
+    if action == "add":
+        # TODO: do add
+        pass
+    if action == "delete":
+        # TODO: do delete
+        pass
+    
 
 client.run(os.getenv("TOKEN"))
